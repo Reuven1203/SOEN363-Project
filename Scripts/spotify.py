@@ -36,7 +36,7 @@ def get_playlist_tracks(uri):
     return simplified_tracks
 
 
-playlist_uri = '5gmYyeyFR3X6f4TfCYWrz8'
+playlist_uri = ''
 for track in get_playlist_tracks(playlist_uri):
     print(f"ID: {track['song_id']}, Song: {track['song_name']}, Artists: {', '.join(track['artists'])}")
 
