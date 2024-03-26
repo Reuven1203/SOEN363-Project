@@ -6,8 +6,8 @@ from spotipy import SpotifyClientCredentials
 
 # Set up the Spotify API
 # client_id = os.environ['SPOTIFY_CLIENT_ID']
-client_id = 'd8c4c8c178e14d8dbfd607f19eacbd57'
-client_secret = 'bdf5a7bf00604be8914edf740177d765'
+client_id = ''
+client_secret = ''
 
 sp = spotipy.Spotify(
     client_credentials_manager=SpotifyClientCredentials(client_id=client_id, client_secret=client_secret))
