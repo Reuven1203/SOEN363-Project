@@ -32,6 +32,7 @@ def get_playlist_tracks(uri):
             track_info = {
                 'song_id': track['id'],
                 'song_name': track['name'],
+                'album_name': track['album']['name'],
                 'artists': [artist['name'] for artist in track['artists']]
             }
             simplified_tracks.append(track_info)
@@ -42,8 +43,9 @@ def get_playlist_tracks(uri):
 
 playlist_uri = 'https://open.spotify.com/playlist/37i9dQZF1DWY4xHQp97fN6'
 for track in get_playlist_tracks(playlist_uri):
-    print(f"ID: {track['song_id']}, Song: {track['song_name']}, Artists: {', '.join(track['artists'])}")
+    print(f"ID: {track['song_id']}, Song: {track['song_name']}, Artists: {', '.join(track['artists'])}, Album: {track['album_name']}")
 
 with open('spotify_data.csv', 'w') as file:
+    file.write("ID, Song,Artists, Album\n")
     for track in get_playlist_tracks(playlist_uri):
-        file.write(f"{track['song_id']},{track['song_name']},{', '.join(track['artists'])}\n")
+        file.write(f"{track['song_id']},{track['song_name']},{', '.join(track['artists'])},{track['album_name']}\n")
