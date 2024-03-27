@@ -1,4 +1,5 @@
 import requests
+import time
 
 def get_music_brainz_id(recording_name, artist_name):
     query = f'artist:{artist_name}%20AND%20recording:{recording_name}'
@@ -13,6 +14,7 @@ with(open('spotify_data.csv', 'r')) as file:
     for line in file:
         song_id, song_name, artist_name = line.strip().split(',')
         music_brainz_id = get_music_brainz_id(song_name, artist_name)
+        time.sleep(1.2)
         if music_brainz_id:
             print(f"Song: {song_name}, Artist: {artist_name}, MusicBrainz ID: {music_brainz_id}")
         else:
