@@ -10,8 +10,6 @@ from spotipy import SpotifyClientCredentials
 load_dotenv()
 client_id = os.environ['SPOTIFY_CLIENT_ID']
 client_secret = os.environ['SPOTIFY_CLIENT_SECRET']
-# client_id = '461fba45b2a24aff81b6cbcd3f24266e'
-# client_secret = 'c5ea6c9c70434e9da20ccfa4a7e12482'
 
 sp = spotipy.Spotify(
     client_credentials_manager=SpotifyClientCredentials(client_id=client_id, client_secret=client_secret))
