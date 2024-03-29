@@ -37,17 +37,18 @@ def get_playlist_tracks(uri):
         if len(track['artists']) == 1:  # Check if there's exactly one artist
             track_info = {
                 'song_id': track['id'],
-                'song_name': track['name'],
+                'title': track['name'],
                 'album_name': track['album']['name'],
-                'artists': [artist['name'] for artist in track['artists']]
+                'artists': [artist['name'] for artist in track['artists']],
+                'artist_id': track['artists'][0]['id'],
+                'track_number': track['track_number'],
+                'runtime': track['duration_ms'],
+                'release_date': track['album']['release_date'],
             }
             simplified_tracks.append(track_info)
-
     return simplified_tracks
 
-playlist_uri = 'https://open.spotify.com/playlist/3EA9XzRJXlis6s16lWNDUW?si=c134d543f5a94590'
-for track in get_playlist_tracks(playlist_uri):
-    print(f"ID: {track['song_id']}, Song: {track['song_name']}, Artists: {', '.join(track['artists'])}, Album: {track['album_name']}")
+playlist_uri = 'https://open.spotify.com/playlist/0kSX5DGE1vONa5udHz8BWi?si=1b36c13ce8c14857'
 
 genders = ["M", "F", "O"]
 nationalities = [
@@ -57,7 +58,14 @@ nationalities = [
     "Norwegian", "Polish", "Russian", "South African", "Spanish",
     "Swedish", "Thai", "Turkish", "British", "Vietnamese"
 ]
-
+genres = [
+    'Grime','Techno','Heavy Metal','Classical','Pop','House',
+    'Experimental', 'Electronic','Hip Hop','Disco','Rock',
+    'Blues','Reggae','Soul','Indie', 'Opera', 'Dubstep',
+    'World','Ambient', 'Jazz', 'Punk', 'Ska', 'Trance',
+     'Folk', 'Funk', 'Country', 'R&B', 'Drum and Bass',
+     'New Age', 'Gospel'
+]
 
 connection = psycopg2.connect(
         dbname=db_name,
@@ -65,17 +73,18 @@ connection = psycopg2.connect(
         password=db_password,
         host=db_host
     )
-connection.autocommit = False
+# connection.autocommit = False
 
 cursor = connection.cursor()
 
 def insert_person(name, gender, years, nationality):
     query = """
-        INSERT INTO persons (name, gender, years, nationality)
+        INSERT INTO people (name, gender, years_of_experience, nationality)
         VALUES (%s, %s, %s, %s);
         """
     cursor.execute(query, (name, gender, years, nationality))
-    person_id = cursor.lastrowid
+    connection.commit()
+    person_id = cursor.fetchone()[0]
     return person_id
 
 def insert_artist(person_id, spotify_id):
@@ -84,7 +93,8 @@ def insert_artist(person_id, spotify_id):
         VALUES (%s, %s);
         """
     cursor.execute(query, (person_id, spotify_id))
-    artist_id = cursor.lastrowid
+    connection.commit()
+    artist_id = cursor.fetchone()[0]
     return artist_id
 
 def insert_genre(name):
@@ -93,7 +103,8 @@ def insert_genre(name):
         VALUES (%s);
         """
     cursor.execute(query, (name,))
-    genre_id = cursor.lastrowid
+    connection.commit()
+    genre_id = cursor.fetchone()[0]
     return genre_id
 
 def insert_song(artist_id, spotify_id, title, album_name, track_number, runtime, release_date, genre_id):
@@ -102,7 +113,8 @@ def insert_song(artist_id, spotify_id, title, album_name, track_number, runtime,
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
         """
     cursor.execute(query, (artist_id, spotify_id, title, album_name, track_number, runtime, release_date, genre_id))
-    song_id = cursor.lastrowid
+    connection.commit()
+    song_id = cursor.fetchone()[0]
     return song_id
 
 try:
@@ -110,33 +122,41 @@ try:
     for track in get_playlist_tracks(playlist_uri):
 
         # Insert the person
-        person_name = track['artists'][0]['name']
+        person_name = track['artists'][0]
         person_gender = random.choice(genders)
         person_years = random.randint(0, 50)
         person_nationality = random.choice(nationalities)
         person_id = insert_person(person_name, person_gender, person_years, person_nationality)
 
+        print(f"Inserted person with ID: {person_id}")
+
         # Insert the artist
-        artist_person_id = cursor.lastrowid
-        artist_spotify_id = track['artists'][0]['id']
+        artist_person_id = person_id
+        artist_spotify_id = track['artist_id']
         artist_id = insert_artist(artist_person_id, artist_spotify_id)
 
+        print(f"Inserted artist with ID: {artist_id}")
+
         # Insert the genre
-        name = track['artists'][0]['genres'][0]
+        name = random.choice(genres)
         genre_id = insert_genre(name)
 
+        print(f"Inserted genre with ID: {genre_id}")
+
         # Insert the song
-        artist_id = artist_id
+        artist_id = track['artist_id']
         song_spotify_id = track['id']
         title = track['name']
-        album_name = track['album']['name']
+        album_name = track['album_name']
         track_number = track['track_number']
         runtime = track['duration_ms']
         release_date = track['release_date']
         genre_id = genre_id
         insert_song(artist_id, song_spotify_id, title, album_name, track_number, runtime, release_date, genre_id)
 
-    connection.commit()
+        print(f"Inserted song with ID: {cursor.lastrowid}")
+
+    # connection.commit()
 
     print("Connection to the database was successful")
 except Exception as e:
@@ -149,72 +169,3 @@ finally:
         cursor.close()
     if connection:
         connection.close()
-
-# CREATE TABLE People
-# (
-#     person_id SERIAL PRIMARY KEY,
-#     name VARCHAR(100) NOT NULL ,
-#     gender CHAR(1),
-#     years_of_experience INT,
-#     nationality VARCHAR(100)
-# );
-
-# CREATE TABLE Artist
-# (
-#     artist_id SERIAL PRIMARY KEY,
-#     person_id INT,
-#     spotify_id VARCHAR(100),
-#     FOREIGN KEY (person_id) REFERENCES People(person_id)
-# );
-#
-
-# CREATE TABLE Genre
-# (
-#     genre_id SERIAL PRIMARY KEY,
-#     name VARCHAR(100)
-# );
-
-# CREATE TABLE Songs
-# (
-#     artist_id INT, -- get this from the artist table based on the artist name
-#     song_id SERIAL PRIMARY KEY,
-#     spotify_id VARCHAR(100), -- id
-#     music_brainz_id VARCHAR(100), --(update running the music_brainz script)
-#     title VARCHAR(100) NOT NULL , -- name
-#     album_name VARCHAR(100), -- album.name
-#     track_number INT, --track_number
-#     runtime INT NOT NULL, -- duration_ms
-#     release_date DATE, --release_date
-#     genre_id INT, --(random from the existing genres)
-#     FOREIGN KEY (genre_id) REFERENCES Genre(genre_id),
-#     FOREIGN KEY (artist_id) REFERENCES Artist(artist_id)
-#
-# );
-
-
-# DO THIS AFTER THE CREATION
-
-# CREATE TABLE Label
-# (
-#     label_id SERIAL PRIMARY KEY,
-#     name VARCHAR(100) NOT NULL
-# );
-
-# CREATE TABLE Producer
-# (
-#     producer_id SERIAL PRIMARY KEY,
-#     person_id INT,
-#     label_id INT,
-#     FOREIGN KEY (person_id) REFERENCES People(person_id),
-#     FOREIGN KEY (label_id) REFERENCES Label(label_id)
-# );
-
-# First iterate over artists in the songs array, create the artist records,
-# Iterate create the genre records,
-# then iterate again and create the songs in the same order,
-# Then create the songs and refer to the artist_id and genre_id
-
-
-# Create the artists
-# Create the songs
-# Verify that the album trigger worked
