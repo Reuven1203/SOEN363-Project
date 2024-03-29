@@ -3,6 +3,7 @@
 import spotipy
 import os
 from dotenv import load_dotenv
+import psycopg2
 
 from spotipy import SpotifyClientCredentials
 
@@ -10,6 +11,10 @@ from spotipy import SpotifyClientCredentials
 load_dotenv()
 client_id = os.environ['SPOTIFY_CLIENT_ID']
 client_secret = os.environ['SPOTIFY_CLIENT_SECRET']
+db_name = os.environ['DB_NAME']
+db_user = os.environ['DB_USER']
+db_password = os.environ['DB_PASSWORD']
+db_host = os.environ['DB_HOST']
 
 sp = spotipy.Spotify(
     client_credentials_manager=SpotifyClientCredentials(client_id=client_id, client_secret=client_secret))
@@ -46,6 +51,21 @@ for track in get_playlist_tracks(playlist_uri):
     print(f"ID: {track['song_id']}, Song: {track['song_name']}, Artists: {', '.join(track['artists'])}, Album: {track['album_name']}")
 
 with open('spotify_data.csv', 'w') as file:
-    file.write("ID, Song,Artists, Album\n")
+    file.write("ID,Song,Artists,Album\n")
     for track in get_playlist_tracks(playlist_uri):
         file.write(f"{track['song_id']},{track['song_name']},{', '.join(track['artists'])},{track['album_name']}\n")
+
+try:
+    connection = psycopg2.connect(
+        dbname=db_name,
+        user=db_user,
+        password=db_password,
+        host=db_host
+    )
+    print("Connection to the database was successful")
+except Exception as e:
+    print(f"An error occurred: {e}")
+
+
+
+
