@@ -4,6 +4,7 @@ import spotipy
 import os
 from dotenv import load_dotenv
 import psycopg2
+import random
 
 from spotipy import SpotifyClientCredentials
 
@@ -44,7 +45,7 @@ def get_playlist_tracks(uri):
 
     return simplified_tracks
 
-playlist_uri = 'https://open.spotify.com/playlist/6jTSS2KyX9EEcSwJkJSHao?si=53ca44c6b8b04247'
+playlist_uri = 'https://open.spotify.com/playlist/3EA9XzRJXlis6s16lWNDUW?si=c134d543f5a94590'
 for track in get_playlist_tracks(playlist_uri):
     print(f"ID: {track['song_id']}, Song: {track['song_name']}, Artists: {', '.join(track['artists'])}, Album: {track['album_name']}")
 
@@ -68,8 +69,72 @@ connection.autocommit = False
 
 cursor = connection.cursor()
 
+def insert_person(name, gender, years, nationality):
+    query = """
+        INSERT INTO persons (name, gender, years, nationality)
+        VALUES (%s, %s, %s, %s);
+        """
+    cursor.execute(query, (name, gender, years, nationality))
+    person_id = cursor.lastrowid
+    return person_id
+
+def insert_artist(person_id, spotify_id):
+    query = """
+        INSERT INTO artist (person_id, spotify_id)
+        VALUES (%s, %s);
+        """
+    cursor.execute(query, (person_id, spotify_id))
+    artist_id = cursor.lastrowid
+    return artist_id
+
+def insert_genre(name):
+    query = """
+        INSERT INTO genre (name)
+        VALUES (%s);
+        """
+    cursor.execute(query, (name,))
+    genre_id = cursor.lastrowid
+    return genre_id
+
+def insert_song(artist_id, spotify_id, title, album_name, track_number, runtime, release_date, genre_id):
+    query = """
+        INSERT INTO songs (artist_id, spotify_id, title, album_name, track_number, runtime, release_date, genre_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
+        """
+    cursor.execute(query, (artist_id, spotify_id, title, album_name, track_number, runtime, release_date, genre_id))
+    song_id = cursor.lastrowid
+    return song_id
+
 try:
     # For every song create a person, artist, genre, and song record
+    for track in get_playlist_tracks(playlist_uri):
+
+        # Insert the person
+        person_name = track['artists'][0]['name']
+        person_gender = random.choice(genders)
+        person_years = random.randint(0, 50)
+        person_nationality = random.choice(nationalities)
+        person_id = insert_person(person_name, person_gender, person_years, person_nationality)
+
+        # Insert the artist
+        artist_person_id = cursor.lastrowid
+        artist_spotify_id = track['artists'][0]['id']
+        artist_id = insert_artist(artist_person_id, artist_spotify_id)
+
+        # Insert the genre
+        name = track['artists'][0]['genres'][0]
+        genre_id = insert_genre(name)
+
+        # Insert the song
+        artist_id = artist_id
+        song_spotify_id = track['id']
+        title = track['name']
+        album_name = track['album']['name']
+        track_number = track['track_number']
+        runtime = track['duration_ms']
+        release_date = track['release_date']
+        genre_id = genre_id
+        insert_song(artist_id, song_spotify_id, title, album_name, track_number, runtime, release_date, genre_id)
 
     connection.commit()
 
