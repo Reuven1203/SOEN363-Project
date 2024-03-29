@@ -19,14 +19,14 @@ CREATE TABLE Artist
 CREATE TABLE Genre
 (
     genre_id SERIAL PRIMARY KEY,
-    name VARCHAR(100)
+    name VARCHAR(100) NOT NULL
 );
 
 CREATE TABLE Songs
 (
     artist_id INT,
     song_id SERIAL PRIMARY KEY,
-    spotify_id VARCHAR(100),
+    spotify_id VARCHAR(100) NOT NULL,
     music_brainz_id VARCHAR(100),
     title VARCHAR(100) NOT NULL ,
     album_name VARCHAR(100),
