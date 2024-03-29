@@ -10,8 +10,8 @@ CREATE TABLE People
 CREATE TABLE Artist
 (
     artist_id SERIAL PRIMARY KEY,
-    person_id INT,
-    spotify_id VARCHAR(100),
+    person_id INT UNIQUE NOT NULL,
+    spotify_id VARCHAR(100) UNIQUE NOT NULL,
     FOREIGN KEY (person_id) REFERENCES People(person_id)
 );
 

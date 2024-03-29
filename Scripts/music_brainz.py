@@ -1,6 +1,8 @@
 import requests
 import time
 
+# change this to update the records and add the music_brains_id
+
 def get_music_brainz_id(recording_name, artist_name):
     query = f'artist:{artist_name}%20AND%20recording:{recording_name}'
     response = requests.get(f'https://musicbrainz.org/ws/2/recording?query={query}&fmt=json')
