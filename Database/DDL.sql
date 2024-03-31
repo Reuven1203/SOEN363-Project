@@ -32,7 +32,7 @@ CREATE TABLE Songs
     album_name VARCHAR(100),
     track_number INT,
     runtime INT NOT NULL,
-    release_date DATE,
+    release_date VARCHAR(100) NOT NULL,
     genre_id INT,
     FOREIGN KEY (genre_id) REFERENCES Genre(genre_id),
     FOREIGN KEY (artist_id) REFERENCES Artist(artist_id)
