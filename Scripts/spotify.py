@@ -21,6 +21,12 @@ sp = spotipy.Spotify(
     client_credentials_manager=SpotifyClientCredentials(client_id=client_id, client_secret=client_secret))
 
 
+def get_user_playlists(username):
+    playlists = sp.user_playlists(username)
+    # return just the playlists uri and name
+    return [{'uri': playlist['uri'], 'name': playlist['name']} for playlist in playlists['items']]
+
+
 # Get tracks from a playlist url
 
 def get_playlist_tracks(uri):
@@ -48,7 +54,8 @@ def get_playlist_tracks(uri):
             simplified_tracks.append(track_info)
     return simplified_tracks
 
-playlist_uri = 'https://open.spotify.com/playlist/0kSX5DGE1vONa5udHz8BWi?si=1b36c13ce8c14857'
+
+# playlist_uri = 'https://open.spotify.com/playlist/0kSX5DGE1vONa5udHz8BWi?si=1b36c13ce8c14857'
 
 genders = ["M", "F", "O"]
 nationalities = [
@@ -59,20 +66,20 @@ nationalities = [
     "Swedish", "Thai", "Turkish", "British", "Vietnamese"
 ]
 genres = [
-    'Grime','Techno','Heavy Metal','Classical','Pop','House',
-    'Experimental', 'Electronic','Hip Hop','Disco','Rock',
-    'Blues','Reggae','Soul','Indie', 'Opera', 'Dubstep',
-    'World','Ambient', 'Jazz', 'Punk', 'Ska', 'Trance',
-     'Folk', 'Funk', 'Country', 'R&B', 'Drum and Bass',
-     'New Age', 'Gospel'
+    'Grime', 'Techno', 'Heavy Metal', 'Classical', 'Pop', 'House',
+    'Experimental', 'Electronic', 'Hip Hop', 'Disco', 'Rock',
+    'Blues', 'Reggae', 'Soul', 'Indie', 'Opera', 'Dubstep',
+    'World', 'Ambient', 'Jazz', 'Punk', 'Ska', 'Trance',
+    'Folk', 'Funk', 'Country', 'R&B', 'Drum and Bass',
+    'New Age', 'Gospel'
 ]
 
 connection = psycopg2.connect(
-        dbname=db_name,
-        user=db_user,
-        password=db_password,
-        host=db_host
-    )
+    dbname=db_name,
+    user=db_user,
+    password=db_password,
+    host=db_host
+)
 # connection.autocommit = False
 
 cursor = connection.cursor()
@@ -91,6 +98,7 @@ def insert_person(name, gender, years, nationality):
     person_id = cursor.fetchone()[0]
     return person_id
 
+
 def insert_artist(person_id, spotify_id):
     query = """
         INSERT INTO artist (person_id, spotify_id)
@@ -101,6 +109,7 @@ def insert_artist(person_id, spotify_id):
     artist_id = cursor.fetchone()[0]
     return artist_id
 
+
 def insert_genre(name):
     query = """
         INSERT INTO genre (name)
@@ -110,6 +119,7 @@ def insert_genre(name):
     cursor.execute(query, (name,))
     genre_id = cursor.fetchone()[0]
     return genre_id
+
 
 def insert_song(artist_id, spotify_id, title, album_name, track_number, runtime, release_date, genre_id):
     query = """
@@ -149,6 +159,7 @@ def ensure_artist_exists(track):
         artist_id = insert_artist(person_id, artist_spotify_id)
         return artist_id
 
+
 def find_genre_by_name(genre_name):
     query = """
         SELECT genre_id FROM Genre WHERE name = %s;
@@ -157,6 +168,7 @@ def find_genre_by_name(genre_name):
     result = cursor.fetchone()
     return result[0] if result else None
 
+
 def ensure_genre_exists(genre_name):
     existing_genre_id = find_genre_by_name(genre_name)
     if existing_genre_id is not None:
@@ -164,40 +176,41 @@ def ensure_genre_exists(genre_name):
     else:
         return insert_genre(genre_name)
 
-
-
-try:
+user = 'reuven1203'
+for playlist in get_user_playlists(user):
     # For every song create a person, artist, genre, and song record
-    for track in get_playlist_tracks(playlist_uri):
+    for track in get_playlist_tracks(playlist['uri']):
 
-        artist_id = ensure_artist_exists(track)
-        print(f"Artist ID: {artist_id}")
+        try:
+            artist_id = ensure_artist_exists(track)
+            print(f"Artist ID: {artist_id}")
 
-        # Check or insert genre
-        genre_name = random.choice(genres)
-        genre_id = ensure_genre_exists(genre_name)
-        print(f"Genre ID: {genre_id}")
+            # Check or insert genre
+            genre_name = random.choice(genres)
+            genre_id = ensure_genre_exists(genre_name)
+            print(f"Genre ID: {genre_id}")
 
-        # Insert the song with all details
-        song_spotify_id = track['song_id']
-        title = track['title']
-        album_name = track['album_name']
-        track_number = track['track_number']
-        runtime = track['runtime']
-        release_date = track['release_date']
+            # Insert the song with all details
+            song_spotify_id = track['song_id']
+            title = track['title']
+            album_name = track['album_name']
+            track_number = track['track_number']
+            runtime = track['runtime']
+            release_date = track['release_date']
 
-        song_id = insert_song(artist_id, song_spotify_id, title, album_name, track_number, runtime,
-                              release_date, genre_id)
-        print(f"Inserted song with ID: {song_id}")
+            song_id = insert_song(artist_id, song_spotify_id, title, album_name, track_number, runtime,
+                                  release_date, genre_id)
+            print(f"Inserted song with ID: {song_id}")
+
+        except Exception as e:
+            print(f"An error occurred while processing track {track['song_id']}: {e}")
 
     connection.commit()
-except Exception as e:
 
-    if connection:
-        connection.rollback()
-    print(f"An error occurred: {e}")
-finally:
-    if cursor:
-        cursor.close()
-    if connection:
-        connection.close()
+# Final clean-up outside the loop
+if cursor:
+    cursor.close()
+if connection:
+    connection.close()
+
+
