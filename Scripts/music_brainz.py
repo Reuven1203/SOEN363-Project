@@ -53,7 +53,7 @@ def update_songs_with_music_brainz_id():
             """, (music_brainz_id, song_id))
             connection.commit()
             print(f'Updated song {title} with music brainz id {music_brainz_id}')
-        time.sleep(1.2)
+        time.sleep(0.5)
 
     cursor.close()
     connection.close()
