@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 import psycopg2
 import random
+import re
 
 from spotipy import SpotifyClientCredentials
 
@@ -210,29 +211,41 @@ def populate_songs_with_username(user):
         for playlist in get_user_playlists(user):
             for track in get_playlist_tracks(playlist['uri']):
                 if track:  # Ensure track is not None
-                    spotify_id = track.get('song_id')
-                    if spotify_id and not check_song_exists(spotify_id):  # Check if song does not exist
-                        try:
-                            artist_id = ensure_artist_exists(track)
-                            print(f"Artist ID: {artist_id}")
+                    try:
+                        spotify_id = track.get('song_id')
+                        if not spotify_id or check_song_exists(spotify_id):
+                            print(f"Skipping insertion for existing song with Spotify ID: {spotify_id}")
+                            continue
 
-                            genre_name = random.choice(genres)
-                            genre_id = ensure_genre_exists(genre_name)
-                            print(f"Genre ID: {genre_id}")
+                        artist_id = ensure_artist_exists(track)
+                        print(f"Artist ID: {artist_id}")
 
-                            title = track['title']
-                            album_name = track['album_name']
-                            track_number = track['track_number']
-                            runtime = track['runtime']
-                            release_date = track['release_date']
+                        genre_name = random.choice(genres)
+                        genre_id = ensure_genre_exists(genre_name)
+                        print(f"Genre ID: {genre_id}")
 
-                            song_id = insert_song(artist_id, spotify_id, title, album_name, track_number, runtime, release_date, genre_id)
-                            print(f"Inserted song with ID: {song_id}")
+                        title = track['title']
+                        album_name = track['album_name']
+                        track_number = track['track_number']
+                        runtime = track['runtime']
+                        release_date = track['release_date']
 
-                        except Exception as e:
-                            print(f"An error occurred while processing track {spotify_id}: {e}")
-                    else:
-                        print(f"Skipping insertion for existing song with Spotify ID: {spotify_id}")
+                        # Additional domain checks
+                        if release_date < '1900-01-01':
+                            print(f"Skipping insertion due to violation of Release Date Domain: {release_date}")
+                            continue
+                        if not re.match('^[a-zA-Z0-9]*$', spotify_id):
+                            print(f"Skipping insertion due to violation of Spotify ID Domain: {spotify_id}")
+                            continue
+                        if track_number <= 0:
+                            print(f"Skipping insertion due to violation of Track Number Domain: {track_number}")
+                            continue
+
+                        song_id = insert_song(artist_id, spotify_id, title, album_name, track_number, runtime, release_date, genre_id)
+                        print(f"Inserted song with ID: {song_id}")
+
+                    except Exception as e:
+                        print(f"An error occurred while processing track {spotify_id}: {e}")
 
         connection.commit()
     finally:
@@ -241,9 +254,6 @@ def populate_songs_with_username(user):
             cursor.close()
         if connection:
             connection.close()
-
-
-
 
 def populate_songs_with_artist(artist_uri):
     try:
@@ -378,7 +388,7 @@ def update_database():
             connection.commit()
 
 
-username = 'spotify'
+username = '22dlodbsqxerwbtkik63laona'
 populate_songs_with_username(username)
 
 # update_database()
