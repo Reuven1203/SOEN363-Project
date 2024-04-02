@@ -40,3 +40,30 @@ CREATE DOMAIN TrackNumberDomain INT CHECK(VALUE > 0);
 
 -- Types
 
+CREATE TYPE AlbumType AS (
+    name VARCHAR(100),
+    num_tracks INT,
+    release_date DATE
+);
+CREATE TYPE ProducerType AS (
+    name VARCHAR(100),
+    gender CHAR(1),
+    years_of_experience INT,
+    nationality VARCHAR(100)
+);
+CREATE TYPE SongType AS (
+    title VARCHAR(100),
+    album_name VARCHAR(100),
+    track_number INT,
+    runtime INT,
+    release_date DATE
+);
+CREATE TYPE ArtistType AS (
+    name VARCHAR(100),
+    gender CHAR(1),
+    years_of_experience INT,
+    nationality VARCHAR(100)
+);
+CREATE TYPE LabelType AS (
+    name VARCHAR(100)
+);
