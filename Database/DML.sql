@@ -126,5 +126,17 @@ WHERE NOT EXISTS (
     SELECT S2.genre_id FROM Songs S2 WHERE S2.artist_id = S1.artist_id
 );
 
--- TODO: Overlap and Covering Constraint
+-- Queries Demonstrating Covering/Overlapping Constraints
+-- Overlapping Constraint
+-- This query spots overlaps by detecting songs by the same artist with the same release dates.
+SELECT s1.artist_id, s1.title AS song1, s2.title AS song2, s1.release_date
+FROM Songs s1
+JOIN Songs s2 ON s1.artist_id = s2.artist_id AND s1.song_id != s2.song_id
+WHERE s1.release_date = s2.release_date
+ORDER BY s1.artist_id, s1.release_date;
 
+-- Covering Constraint
+-- Since all artists are also people then it is a covering constraint. This will return all people/artists.
+SELECT A.artist_id, A.spotify_id, P.name, P.gender, P.nationality
+FROM Artist A
+JOIN People P ON A.person_id = P.person_id;
