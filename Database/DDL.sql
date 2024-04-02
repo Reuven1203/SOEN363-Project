@@ -26,7 +26,7 @@ CREATE TABLE Songs
 (
     artist_id INT,
     song_id SERIAL PRIMARY KEY,
-    spotify_id VARCHAR(100) NOT NULL,
+    spotify_id VARCHAR(100) UNIQUE NOT NULL,
     music_brainz_id VARCHAR(100),
     title VARCHAR(100) NOT NULL ,
     album_name VARCHAR(100),
