@@ -19,44 +19,16 @@ JOIN Album a ON l.label_id = a.label_id
 JOIN Artist ar ON a.artist_id = ar.artist_id
 JOIN People p ON ar.person_id = p.person_id;
 
+
+-- Example of a VIEW with Hard-Coded Criteria
+CREATE VIEW AmericanArtists AS
+SELECT Artist.artist_id, Artist.spotify_id, People.person_id, People.name, People.gender, People.years_of_experience, People.nationality
+FROM Artist
+JOIN People ON Artist.person_id = People.person_id
+WHERE nationality = 'American';
+
+
 -- Domains
-
-CREATE DOMAIN GenderDomain CHAR(1) CHECK(VALUE IN ('M', 'F', 'O'));
-
-CREATE DOMAIN ReleaseDateDomain DATE CHECK(VALUE >= '1900-01-01');
-
-CREATE DOMAIN SpotifyIDDomain VARCHAR(100) CHECK(VALUE ~ '^[a-zA-Z0-9]*$');
-
-CREATE DOMAIN TrackNumberDomain INT CHECK(VALUE > 0);
-
-CREATE DOMAIN RuntimeDomain INT CHECK(VALUE > 0);
 
 -- Types
 
-CREATE TYPE AlbumType AS (
-    name VARCHAR(100),
-    num_tracks INT,
-    release_date DATE
-);
-CREATE TYPE ProducerType AS (
-    name VARCHAR(100),
-    gender CHAR(1),
-    years_of_experience INT,
-    nationality VARCHAR(100)
-);
-CREATE TYPE SongType AS (
-    title VARCHAR(100),
-    album_name VARCHAR(100),
-    track_number INT,
-    runtime INT,
-    release_date DATE
-);
-CREATE TYPE ArtistType AS (
-    name VARCHAR(100),
-    gender CHAR(1),
-    years_of_experience INT,
-    nationality VARCHAR(100)
-);
-CREATE TYPE LabelType AS (
-    name VARCHAR(100)
-);
