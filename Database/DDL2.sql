@@ -23,13 +23,11 @@ JOIN People p ON ar.person_id = p.person_id;
 
 CREATE DOMAIN GenderDomain CHAR(1) CHECK(VALUE IN ('M', 'F', 'O'));
 
-CREATE DOMAIN ReleaseDateDomain DATE CHECK(VALUE >= '1900-01-01');
+CREATE DOMAIN ReleaseDateDomain VARCHAR(100) CHECK(VALUE >= '1900-01-01');
 
 CREATE DOMAIN SpotifyIDDomain VARCHAR(100) CHECK(VALUE ~ '^[a-zA-Z0-9]*$');
 
 CREATE DOMAIN TrackNumberDomain INT CHECK(VALUE > 0);
-
-CREATE DOMAIN RuntimeDomain INT CHECK(VALUE > 0);
 
 -- Types
 
