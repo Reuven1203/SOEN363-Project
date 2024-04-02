@@ -121,10 +121,43 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+-- TEST THIS OUT TMR
 CREATE TRIGGER trigger_create_album_after_song_insert
 AFTER INSERT ON Songs
 FOR EACH ROW
 EXECUTE FUNCTION create_album_if_not_exists();
+
+CREATE OR REPLACE FUNCTION update_album_details()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Update the number of tracks for the album
+    UPDATE Album
+    SET num_tracks = (
+        SELECT COUNT(*)
+        FROM Songs
+        WHERE Songs.album_name = Album.name AND Songs.artist_id = Album.artist_id
+    )
+    WHERE artist_id = NEW.artist_id AND name = NEW.album_name;
+    
+    -- Update the release date to the earliest release date of the songs in the album
+    UPDATE Album
+    SET release_date = (
+        SELECT MIN(release_date)
+        FROM Songs
+        WHERE Songs.album_name = Album.name AND Songs.artist_id = Album.artist_id
+    )
+    WHERE artist_id = NEW.artist_id AND name = NEW.album_name;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER trigger_update_album_after_song_insert
+AFTER INSERT ON Songs
+FOR EACH ROW
+EXECUTE FUNCTION update_album_details();
 
 
 -- VIEWS

@@ -1,0 +1,51 @@
+People:
+- person_id (PK)
+- name
+- gender
+- years_of_experience
+- nationality
+
+Artist:
+- artist_id (PK)
+- person_id (FK to People)
+- spotify_id
+- FOREIGN KEY (person_id) REFERENCES People(person_id)
+
+Genre:
+- genre_id (PK)
+- name
+
+Songs:
+- song_id (PK)
+- artist_id (FK to Artist)
+- spotify_id
+- music_brainz_id
+- title
+- album_name
+- track_number
+- runtime
+- release_date
+- genre_id (FK to Genre)
+- FOREIGN KEY (artist_id) REFERENCES Artist(artist_id)
+- FOREIGN KEY (genre_id) REFERENCES Genre(genre_id)
+
+Label:
+- label_id (PK)
+- name
+
+Producer:
+- producer_id (PK)
+- person_id (FK to People)
+- label_id (FK to Label)
+- FOREIGN KEY (person_id) REFERENCES People(person_id)
+- FOREIGN KEY (label_id) REFERENCES Label(label_id)
+
+Album:
+- artist_id (FK to Artist)
+- name
+- num_tracks
+- release_date
+- label_id (FK to Label)
+- PRIMARY KEY (artist_id, name)
+- FOREIGN KEY (artist_id) REFERENCES Artist(artist_id)
+- FOREIGN KEY (label_id) REFERENCES Label(label_id)
